@@ -11,6 +11,7 @@ from thefuzz import process
 import re
 import nltk
 from nltk.tokenize import word_tokenize
+from nltk.corpus import comtrans
 nltk.download('punkt_tab')
 
 
@@ -81,7 +82,7 @@ print(df_sin_duplicados)
 #extraer cantidades
 
 #%%
-# %% Importar librerías
+#Importar librerías
 import os
 import sys
 import pandas as pd
