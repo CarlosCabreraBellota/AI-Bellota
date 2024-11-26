@@ -5,7 +5,7 @@ from gmft.auto import TableDetector, AutoTableFormatter, AutoFormatConfig
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import pandas as pd
-
+import re
 # Configure table detector and formatter
 detector = TableDetector()
 config = AutoFormatConfig()
@@ -37,6 +37,15 @@ def extract_tables_to_dataframes(pdf_path):
         doc.close()
 
     return dataframes
+
+def extract_reference(text):
+    """
+    Extrae y normaliza referencias en formatos como '8030 CI CF' o '72305-43 S1P'.
+    """
+    text = text.strip().upper()  # Normalizar a mayúsculas
+    # Buscar referencias con patrones complejos (números, letras, guiones, espacios)
+    match = re.search(r'[A-Z0-9\-]+(?:[\s\-][A-Z0-9]+)*(?:\sS1P)?', text)
+    return match.group(0) if match else text
 
 if __name__ == "__main__":
     # Path to your PDF
@@ -77,11 +86,14 @@ ref_vectors = vectorizer.transform(references_df)
 # Lista para almacenar resultados
 results = []
 
+# Umbral de similitud
+threshold = 0.2
+
 # Recorrer cada celda de df
 for row_idx, row in df.iterrows():
     for col_idx, cell in row.items():
         # Convertir la celda actual a cadena
-        cell = str(cell)
+        cell = str(cell) #extract_reference(str(cell)) str(cell)
 
         # Vectorizar la celda actual
         cell_vector = vectorizer.transform([cell])
@@ -89,32 +101,36 @@ for row_idx, row in df.iterrows():
         # Calcular similitudes con todas las referencias
         similarities = cosine_similarity(cell_vector, ref_vectors).flatten()
 
-        # Obtener el mejor match y su puntaje
-        best_idx = similarities.argmax()
-        best_match = references_df.iloc[best_idx]
-        best_score = similarities[best_idx]
+        # Encontrar todas las coincidencias con similitud >= umbral
+        valid_matches = [
+            {"Matched Reference": references_df.iloc[i], "Similarity Score": score}
+            for i, score in enumerate(similarities)
+            if score >= threshold
+        ]
 
-        # Aplicar un umbral
-        # Aplicar un umbral
-        threshold = 0.9
-        if best_score >= threshold:
-            # Solo incluir matches válidos
+        # Añadir los resultados válidos con sus detalles
+        for match in valid_matches:
             results.append({
-                'Row': row_idx,
-                'Column': col_idx,
-                'Original Value': cell,
-                'Matched Reference': best_match,
-                'Similarity Score': best_score
+                #'Row': row_idx,
+                #'Column': col_idx,
+                #'Original Value': cell,
+                'Matched Reference': match["Matched Reference"],
+                #'Similarity Score': match["Similarity Score"]
             })
 
-    # Convertir los resultados a un DataFrame
-    matched_df = pd.DataFrame(results)
-    matched_df = matched_df['Matched Reference'].drop_duplicates()
+# Convertir los resultados a un DataFrame
+matched_df = pd.DataFrame(results)
 
-    # Mostrar y guardar los resultados
-    print(matched_df)
-    matched_df.to_csv("Matched_Results.csv", index=False)
-    print("Resultados guardados en 'Matched_Results.csv'")
+# Eliminar duplicados
+matched_df = matched_df.drop_duplicates()
+
+# Mostrar y guardar los resultados
+print(matched_df)
+matched_df.to_csv("Matched_Results.csv", index=False)
+print("Resultados guardados en 'Matched_Results.csv'")
+
+
+
 
 
 
