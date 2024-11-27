@@ -1,4 +1,3 @@
-
 import gmft
 from gmft.pdf_bindings import PyPDFium2Document
 from gmft.auto import TableDetector, AutoTableFormatter, AutoFormatConfig
@@ -6,6 +5,8 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import pandas as pd
 import re
+import os
+
 # Configure table detector and formatter
 detector = TableDetector()
 config = AutoFormatConfig()
@@ -49,7 +50,7 @@ def extract_reference(text):
 
 if __name__ == "__main__":
     # Path to your PDF
-    pdf_path = "P-2302490.pdf"
+    pdf_path = "ordine del 01-12-2023 Spluga Srl.pdf" #a4034881output #P-2302490 #ordine del 01-12-2023 Spluga Srl
 
     # Extract tables
     tables = extract_tables_to_dataframes(pdf_path)
