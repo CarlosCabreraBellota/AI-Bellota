@@ -6,7 +6,6 @@ from nltk.tokenize import word_tokenize
 import os
 from gmft.pdf_bindings import PyPDFium2Document
 from gmft.auto import TableDetector, AutoTableFormatter, AutoFormatConfig
-
 # Descargar el tokenizador de nltk si es necesario
 import nltk
 nltk.download('punkt')
@@ -37,10 +36,12 @@ references_df = references_df.dropna().drop_duplicates()
 references = references_df.tolist()
 
 # 2. Leer y combinar las tablas del PDF
-pdf = "ordine del 01-12-2023 Spluga Srl.pdf" #Pedido de compras CIA.ESPAÑOLA AISLAMIENTOS S.A. Nº 644506 #P-2302490 #a4034881output #ordine del 01-12-2023 Spluga Srl
+pdf = "a4034881output.pdf" #Pedido de compras CIA.ESPAÑOLA AISLAMIENTOS S.A. Nº 644506 #P-2302490 #a4034881output #ordine del 01-12-2023 Spluga Srl
 tablas = read_pdf(pdf, pages='all', multiple_tables=True)
 tablas_combined = pd.concat(tablas, ignore_index=True)
 
+print(tablas)
+#%%
 # Convertimos todas las celdas a una lista única, eliminando NaN y espacios innecesarios
 pdf_references = tablas_combined.stack().astype(str).unique()  # Usar stack y convertir a str
 pdf_references = [ref.strip().replace("–", "").replace(":", " ").replace(".", " ").lower() for ref in pdf_references if ref != 'nan']
@@ -151,7 +152,7 @@ print(tablas_combined)
 
 
 # Palabras clave relacionadas con "cantidad" en varios idiomas y abreviaturas
-keywords = ["quantity", "qty", "cantidad", "cant", "quantité", "qté",
+keywords = ["quantity", "qty", "cantidad", "cant", "quantité", "qté", "unidades","und",
             "quantidade", "qtd", "quantità", "qtà"]
 
 # Función para seleccionar el DataFrame que tiene alguna de las palabras clave
@@ -216,3 +217,5 @@ pedido = pd.concat([df_sin_duplicados, cantidades_ref],axis=1)
 pedido.to_excel(excel_filename, index=False)
 
 
+
+# %%
